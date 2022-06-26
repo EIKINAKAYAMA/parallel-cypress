@@ -24,6 +24,10 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: install modules
+        run: |
+          npm install
+
       - name: Set CI_BUILD_ID
         run: |
           CI_BUILD_ID=$(node scripts/getCiBuildId.js)
