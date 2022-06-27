@@ -6,9 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CYPRESS_API_URL: 'http://localhost:1234/'
-    # strategy:
-    #   matrix:
-    #     jpb: [0,1]
     steps:
       - uses: actions/checkout@v3
       - name: Install modules
