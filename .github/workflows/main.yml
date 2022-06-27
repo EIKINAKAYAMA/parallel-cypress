@@ -43,13 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CYPRESS_API_URL: 'http://localhost:1234/'
-      steps:
-        - name: Run cypress stage-1
-          run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
+    steps:
+      - name: Run cypress stage-1
+        run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
 
-        - name: Run cypress stage-2
-          env:
-          run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
+      - name: Run cypress stage-2
+        run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
   
   shutdown:
     name: Shutdown
@@ -57,17 +56,17 @@ jobs:
       - setup
       - test
     runs-on: ubuntu-latest
-      steps:
-        - name: stop and remove react
-          needs:
-            - Run cypress
-          run: |
-            pm2 stop react-app
-            pm2 delete react-app
-            
-        - name: stop and remove sorry-cypress
-          needs:
-            - Run cypress
-          run: |
-            docker stop sorry-cypress
-            docker rm sorry-cypress
+    steps:
+      - name: stop and remove react
+        needs:
+          - Run cypress
+        run: |
+          pm2 stop react-app
+          pm2 delete react-app
+          
+      - name: stop and remove sorry-cypress
+        needs:
+          - Run cypress
+        run: |
+          docker stop sorry-cypress
+          docker rm sorry-cypress
