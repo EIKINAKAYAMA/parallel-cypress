@@ -1,84 +1,42 @@
 
-name: CI
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
-
 jobs:
   setup:
+    name: Setup
     name: Cypress parallel tests
     runs-on: ubuntu-latest
     env:
       CYPRESS_API_URL: 'http://localhost:1234/'
-    strategy:
-      matrix:
-        jpb: [0,1]
+    # strategy:
+    #   matrix:
+    #     jpb: [0,1]
     steps:
-      - uses: actions/upload-artifact@v2
+      - uses: actions/checkout@v3
       - name: Install modules
         run: |
           npm install
           npm install -g pm2
-
       - name: Set CI_BUILD_ID
-      - uses: actions/upload-artifact@v2
         run: |
           CI_BUILD_ID=$(node scripts/getCiBuildId.js)
           echo "CI_BUILD_ID=$CI_BUILD_ID" >> $GITHUB_ENV
 
       - name: Build sorry-cypress
-      - uses: actions/upload-artifact@v2
         run: |
           docker image build -t sorry-cypress:latest . 
           docker run -d -p 1234:1234 --name sorry-cypress sorry-cypress
 
       - name: Start react sever
-      - uses: actions/upload-artifact@v2
         run: pm2 start 'npm start' --name react-app
 
-      # - name: Cypress
-      #   run: npx cy2 run --parallel --record --key somekey --ci-build-id $CI_BUILD_ID
-
-  test1:
-    name: Test1
-    needs:
-      - setup
-    runs-on: ubuntu-latest
-    env:
-      CYPRESS_API_URL: 'http://localhost:1234/'
-    strategy:
-      matrix:
-        jpb: [0,1]
-    steps:
-      - name: Run cypress stage-1
-        uses: actions/upload-artifact@v2
+      - name: Cypress Test
         run: npx cy2 run --parallel --record --key somekey --ci-build-id $CI_BUILD_ID
-  # test2:
-  #   name: Test2
-  #   needs: [setup]
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     CYPRESS_API_URL: 'http://localhost:1234/'
-  #   steps:
-  #     - name: Run cypress stage-2
-  #       run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
-  
-  # shutdown:
-  #   name: Shutdown
-  #   # needs: [setup, test1, test2]
-  #   needs: [cypress]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: stop and remove react
-  #       run: |
-  #         pm2 stop react-app
-  #         pm2 delete react-app
+
+      - name: stop and remove react
+        run: |
+          pm2 stop react-app
+          pm2 delete react-app
           
-  #     - name: stop and remove sorry-cypress
-  #       run: |
-  #         docker stop sorry-cypress
-  #         docker rm sorry-cypress
+      - name: stop and remove sorry-cypress
+        run: |
+          docker stop sorry-cypress
+          docker rm sorry-cypress
