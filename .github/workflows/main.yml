@@ -1,62 +1,73 @@
-# This is a basic workflow to help you get started with Actions
 
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - name: install modules
+      - name: Install modules
         run: |
           npm install
+          npm install -g pm2
 
       - name: Set CI_BUILD_ID
+        needs:
+          - Install modules
         run: |
           CI_BUILD_ID=$(node scripts/getCiBuildId.js)
           echo "CI_BUILD_ID=$CI_BUILD_ID" >> $GITHUB_ENV
 
-      # Runs a single command using the runners shell
-      - name: run sorry-cypress
+      - name: Build sorry-cypress
         run: |
           docker image build -t sorry-cypress:latest . 
           docker run -d -p 1234:1234 --name sorry-cypress sorry-cypress
-          
-      - name: install pm2
-        run: npm install -g pm2
-        
-      - name: Run a react sever with background
+
+      - name: Start react sever
+        needs:
+          - Set CI_BUILD_ID
         run: pm2 start 'npm start' --name react-app
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        env:
-          CYPRESS_API_URL: 'http://localhost:1234/'
-        run: | 
-         npx cy2 run --parallel --record --key somekey --ci-build-id $CI_BUILD_ID
-          
-      - name: stop and remove react
-        run: |
-          pm2 stop react-app
-          pm2 delete react-app
-      - name: stop and remove sorry-cypress
-        run: |
-          docker stop sorry-cypress
-          docker rm sorry-cypress
+  test:
+    name: Test
+    needs:
+      - setup
+    runs-on: ubuntu-latest
+    env:
+      CYPRESS_API_URL: 'http://localhost:1234/'
+      steps:
+        - name: Run cypress stage-1
+          run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
+
+        - name: Run cypress stage-2
+          env:
+          run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
+  
+  shutdown:
+    name: Shutdown
+    needs:
+      - setup
+      - test
+    runs-on: ubuntu-latest
+      steps:
+        - name: stop and remove react
+          needs:
+            - Run cypress
+          run: |
+            pm2 stop react-app
+            pm2 delete react-app
+            
+        - name: stop and remove sorry-cypress
+          needs:
+            - Run cypress
+          run: |
+            docker stop sorry-cypress
+            docker rm sorry-cypress
