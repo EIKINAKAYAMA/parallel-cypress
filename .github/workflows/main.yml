@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
-    name: Setup
+  install:
+    name: Install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,10 +18,13 @@ jobs:
         run: |
           npm install
           npm install -g pm2
-
+  setup:
+    name: Setup
+    needs:
+      - install
+    runs-on: ubuntu-latest
+    steps:
       - name: Set CI_BUILD_ID
-        needs:
-          - Install modules
         run: |
           CI_BUILD_ID=$(node scripts/getCiBuildId.js)
           echo "CI_BUILD_ID=$CI_BUILD_ID" >> $GITHUB_ENV
@@ -39,6 +42,7 @@ jobs:
   test:
     name: Test
     needs:
+      - install
       - setup
     runs-on: ubuntu-latest
     env:
