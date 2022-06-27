@@ -37,8 +37,8 @@ jobs:
       - name: Start react sever
         run: pm2 start 'npm start' --name react-app
 
-  test:
-    name: Test
+  test1:
+    name: Test1
     needs:
       - install
       - setup
@@ -48,15 +48,25 @@ jobs:
     steps:
       - name: Run cypress stage-1
         run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
-
+  test2:
+    name: Test2
+    needs:
+      - install
+      - setup
+    runs-on: ubuntu-latest
+    env:
+      CYPRESS_API_URL: 'http://localhost:1234/'
+    steps:
       - name: Run cypress stage-2
         run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
   
   shutdown:
     name: Shutdown
     needs:
+      - install
       - setup
-      - test
+      - test1
+      - test2
     runs-on: ubuntu-latest
     steps:
       - name: stop and remove react
