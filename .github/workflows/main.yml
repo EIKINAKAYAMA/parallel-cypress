@@ -35,8 +35,6 @@ jobs:
           docker run -d -p 1234:1234 --name sorry-cypress sorry-cypress
 
       - name: Start react sever
-        needs:
-          - Set CI_BUILD_ID
         run: pm2 start 'npm start' --name react-app
 
   test:
@@ -62,15 +60,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: stop and remove react
-        needs:
-          - Run cypress
         run: |
           pm2 stop react-app
           pm2 delete react-app
           
       - name: stop and remove sorry-cypress
-        needs:
-          - Run cypress
         run: |
           docker stop sorry-cypress
           docker rm sorry-cypress
