@@ -44,8 +44,7 @@ jobs:
         run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
   test2:
     name: Test2
-    needs:
-      - setup
+    needs: [setup]
     runs-on: ubuntu-latest
     env:
       CYPRESS_API_URL: 'http://localhost:1234/'
@@ -55,10 +54,7 @@ jobs:
   
   shutdown:
     name: Shutdown
-    needs:
-      - setup
-      - test1
-      - test2
+    needs: [setup, test1, test2]
     runs-on: ubuntu-latest
     steps:
       - name: stop and remove react
