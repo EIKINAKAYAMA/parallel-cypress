@@ -1,17 +1,18 @@
 
 jobs:
   setup:
-    name: Setup
     name: Cypress parallel tests
     runs-on: ubuntu-latest
     env:
       CYPRESS_API_URL: 'http://localhost:1234/'
     steps:
       - uses: actions/checkout@v3
+
       - name: Install modules
         run: |
           npm install
           npm install -g pm2
+          
       - name: Set CI_BUILD_ID
         run: |
           CI_BUILD_ID=$(node scripts/getCiBuildId.js)
