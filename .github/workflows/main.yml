@@ -12,6 +12,9 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        jpb: [0,1]
     steps:
       - uses: actions/checkout@v3
       - name: Install modules
@@ -32,37 +35,41 @@ jobs:
       - name: Start react sever
         run: pm2 start 'npm start' --name react-app
 
-  test1:
-    name: Test1
-    needs:
-      - setup
-    runs-on: ubuntu-latest
-    env:
-      CYPRESS_API_URL: 'http://localhost:1234/'
-    steps:
-      - name: Run cypress stage-1
-        run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
-  test2:
-    name: Test2
-    needs: [setup]
-    runs-on: ubuntu-latest
-    env:
-      CYPRESS_API_URL: 'http://localhost:1234/'
-    steps:
-      - name: Run cypress stage-2
-        run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
+      - name: Cypress
+        run: npx cy2 run --parallel --record --key somekey --ci-build-id $CI_BUILD_ID
+
+  # test1:
+  #   name: Test1
+  #   needs:
+  #     - setup
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     CYPRESS_API_URL: 'http://localhost:1234/'
+  #   steps:
+  #     - name: Run cypress stage-1
+  #       run: npx cy2 run --parallel --spec 'cypress/integration/1-parallel-stage-1/1-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
+  # test2:
+  #   name: Test2
+  #   needs: [setup]
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     CYPRESS_API_URL: 'http://localhost:1234/'
+  #   steps:
+  #     - name: Run cypress stage-2
+  #       run: npx cy2 run --parallel --spec 'cypress/integration/2-parallel-stage-2/2-test1.spec.js' --record --key somekey --ci-build-id $CI_BUILD_ID
   
-  shutdown:
-    name: Shutdown
-    needs: [setup, test1, test2]
-    runs-on: ubuntu-latest
-    steps:
-      - name: stop and remove react
-        run: |
-          pm2 stop react-app
-          pm2 delete react-app
+  # shutdown:
+  #   name: Shutdown
+  #   # needs: [setup, test1, test2]
+  #   needs: [cypress]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: stop and remove react
+  #       run: |
+  #         pm2 stop react-app
+  #         pm2 delete react-app
           
-      - name: stop and remove sorry-cypress
-        run: |
-          docker stop sorry-cypress
-          docker rm sorry-cypress
+  #     - name: stop and remove sorry-cypress
+  #       run: |
+  #         docker stop sorry-cypress
+  #         docker rm sorry-cypress
